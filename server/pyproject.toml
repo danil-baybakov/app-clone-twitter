@@ -1,0 +1,21 @@
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "app",
+]
+asyncio_mode="auto"
+filterwarnings = ["ignore::PendingDeprecationWarning"]
+
+
+[tool.flake8]
+max-line-length = 79
+extend-ignore = ["F821", ]
+exclude = ["migrations"]
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.black]
+line-length = 79
+
+
