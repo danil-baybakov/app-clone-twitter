@@ -40,5 +40,3 @@ class User(Base):
             api_key=self.api_key,
             name=self.name,
         )
-
-    __table_args__ = {"keep_existing": True}
