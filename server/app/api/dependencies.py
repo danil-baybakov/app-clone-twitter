@@ -52,5 +52,7 @@ async def get_user(
 ) -> int:
     user = await user_service.get_user_by_api_key(api_key)
     if not user:
-        raise ClientHTTPException(status_code=401, detail="Unauthorised user")
+        raise ClientHTTPException(
+            status_code=401, detail="Не авторизированный пользователь."
+        )
     return user.id

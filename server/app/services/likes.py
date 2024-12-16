@@ -1,16 +1,17 @@
 from schemas.likes import LikeSchemaAddModel, LikeSchemaModel
+from services.base import BaseService
 from utils.exceptions import DatabaseException
 from utils.repository import AbstractRepository
 
 
-class LikeService:
+class LikeService(BaseService):
     """
     Класс предоставляет сервис работы с БД
     для операций с лайками на твитты
     """
 
     def __init__(self, like_repo: AbstractRepository):
-        self.like_repo: AbstractRepository = like_repo()
+        super().__init__(like_repo)
 
     async def get_like_by_id(self, id: int) -> LikeSchemaModel | None:
         """
@@ -20,9 +21,10 @@ class LikeService:
         :return: объект с данными лайка на твитт
         """
         try:
-            like = await self.like_repo.find_one_or_none(id=id)
+            like = await self.repo.find_one_or_none(id=id)
             if like:
                 return like.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении данных лайка с id={id} из БД."
@@ -39,11 +41,12 @@ class LikeService:
         :return: объект с данными лайка на твитт
         """
         try:
-            like = await self.like_repo.find_one_or_none(
+            like = await self.repo.find_one_or_none(
                 tweet_id=tweet_id, user_id=user_id
             )
             if like:
                 return like.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении данных лайка с id={id} и "
@@ -57,7 +60,7 @@ class LikeService:
         :return: id нового лайка или None если операция не прошла
         """
         try:
-            return await self.like_repo.add_one(like.model_dump())
+            return await self.repo.add_one(like.model_dump())
         except Exception:
             raise DatabaseException(
                 message="При добавлении данных лайка в БД произошла ошибка."
@@ -72,7 +75,7 @@ class LikeService:
         :return: True если операция прошла успешно, иначе False
         """
         try:
-            return await self.like_repo.delete_all(
+            return await self.repo.delete_all(
                 tweet_id=tweet_id, user_id=user_id
             )
         except Exception:

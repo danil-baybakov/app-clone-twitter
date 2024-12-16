@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from api.dependencies import media_service
+from api.dependencies import get_user, media_service
 from config import setting
 from fastapi import APIRouter, Depends, Path, Response, UploadFile
 from schemas.errors import ErrorSchemaResponse
@@ -19,11 +19,13 @@ router = APIRouter(
 async def load_files_from_tweet(
     file: UploadFile,
     media_service: Annotated[MediaService, Depends(media_service)],
+    user_id=Depends(get_user),
 ) -> MediaSchemaAddResponse:
     """
     Эндпоинт для добавления медиафайлов к твитту
     :param file: файл
     :param media_service: сервис работы с БД для медиа
+    :param user_id: id текущего пользователя
     :return:
     """
     # делаем запрос к БД для добавления медиафайла
@@ -34,7 +36,9 @@ async def load_files_from_tweet(
 @router.get("/{id}", responses={404: {"model": ErrorSchemaResponse}})
 async def get_files_from_tweet_by_id(
     media_service: Annotated[MediaService, Depends(media_service)],
-    id: int = Path(..., title="id медиафайла", description="id медиафайла"),
+    id: int = Path(
+        ..., title="id медиафайла", description="id медиафайла", gt=0
+    ),
 ) -> bytes:
     """
     Эндпоинт для получения медиафайла по id

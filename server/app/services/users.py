@@ -1,16 +1,17 @@
 from schemas.users import UserSchema, UserSchemaModel
+from services.base import BaseService
 from utils.exceptions import DatabaseException
 from utils.repository import AbstractRepository
 
 
-class UserService:
+class UserService(BaseService):
     """
     Класс предоставляет сервис работы с БД
     для операций с пользователями
     """
 
     def __init__(self, user_repo: AbstractRepository):
-        self.user_repo: AbstractRepository = user_repo()
+        super().__init__(user_repo)
 
     async def get_user_by_api_key(
         self, api_key: str
@@ -23,9 +24,10 @@ class UserService:
         в случае успешной операции, иначе None
         """
         try:
-            user = await self.user_repo.find_one_or_none(api_key=api_key)
+            user = await self.repo.find_one_or_none(api_key=api_key)
             if user:
                 return user.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении данных пользователя "
@@ -41,9 +43,10 @@ class UserService:
         в случае успешной операции, иначе None
         """
         try:
-            user = await self.user_repo.find_one_or_none(id=id)
+            user = await self.repo.find_one_or_none(id=id)
             if user:
                 return user.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении данных пользователя "
@@ -59,7 +62,7 @@ class UserService:
         в случае успешной операции, иначе None
         """
         try:
-            user = await self.user_repo.find_one_or_none(id=id)
+            user = await self.repo.find_one_or_none(id=id)
             if user:
                 list_user_following = []
                 for row_user_following in user.user_list_follower:
@@ -85,6 +88,7 @@ class UserService:
                         "following": list_user_following,
                     }
                 )
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении данных пользователя "

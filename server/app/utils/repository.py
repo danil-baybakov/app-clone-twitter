@@ -3,7 +3,7 @@ from typing import Optional
 
 from db.db import async_session_maker
 from pydantic import BaseModel
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.orm import DeclarativeBase
 
 
@@ -31,6 +31,14 @@ class AbstractRepository(ABC):
 
     @abstractmethod
     async def delete_all(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_all(self, items: list[dict[str, any]]):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def count(self):
         raise NotImplementedError
 
 
@@ -86,3 +94,15 @@ class SQLAlchemyRepository(AbstractRepository):
                     return row
         except Exception:  # noqa
             pass
+
+    async def add_all(self, items: list[dict[str, any]]):
+        async with async_session_maker() as session:
+            stmt = insert(self.model).values(items)
+            await session.execute(stmt)
+            await session.commit()
+
+    async def count(self):
+        async with async_session_maker() as session:
+            stmt = select(func.count(self.model.id))
+            res = await session.execute(stmt)
+            return res.scalar_one()
