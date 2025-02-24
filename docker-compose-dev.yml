@@ -28,32 +28,32 @@ services:
     networks:
       - my_network
 
-  server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    env_file:
-      - server/.env-none-dev
+
+  db_test:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=twitter_test
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - PG_DATA=/var/lib/postgresql/pgdata
+    command:
+      - "postgres"
+      - "-c"
+      - "log_destination=stderr"
+      - "-c"
+      - "logging_collector=on"
+      - "-c"
+      - "log_directory=log"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d twitter -U admin" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
     ports:
-      - "5000:5000"
-    depends_on:
-      db:
-        condition: service_healthy
+      - '5433:5432'
     networks:
       - my_network
-
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    ports:
-      - "8080:80"
-    depends_on:
-      server:
-        condition: service_started
-    networks:
-      - my_network
-
 
 networks:
   my_network:

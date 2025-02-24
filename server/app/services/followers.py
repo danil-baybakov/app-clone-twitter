@@ -1,16 +1,17 @@
 from schemas.followers import FollowerSchemaAddModel, FollowerSchemaModel
+from services.base import BaseService
 from utils.exceptions import DatabaseException
 from utils.repository import AbstractRepository
 
 
-class FollowerService:
+class FollowerService(BaseService):
     """
     Класс предоставляет сервис работы с БД
     для операций подписок на пользователей
     """
 
     def __init__(self, follower_repo: AbstractRepository):
-        self.follower_repo: AbstractRepository = follower_repo()
+        super().__init__(follower_repo)
 
     async def add_following(self, following: FollowerSchemaAddModel) -> int:
         """
@@ -20,7 +21,7 @@ class FollowerService:
         операция прошла успешно, иначе None
         """
         try:
-            return await self.follower_repo.add_one(following.model_dump())
+            return await self.repo.add_one(following.model_dump())
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при добавлении данных подписки на"
@@ -37,7 +38,7 @@ class FollowerService:
         :return: True если операция прошла успешно, иначе False
         """
         try:
-            return await self.follower_repo.delete_all(
+            return await self.repo.delete_all(
                 user_id_follower=user_id_follower,
                 user_id_following=user_id_following,
             )
@@ -59,12 +60,13 @@ class FollowerService:
         случае успешной операции, иначе None
         """
         try:
-            user_following = await self.follower_repo.find_one_or_none(
+            user_following = await self.repo.find_one_or_none(
                 user_id_follower=user_id_follower,
                 user_id_following=user_id_following,
             )
             if user_following:
                 return user_following.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении данных подписки"

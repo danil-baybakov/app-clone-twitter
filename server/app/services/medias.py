@@ -1,17 +1,18 @@
 from fastapi import UploadFile
 from schemas.medias import MediaSchemaAddModel, MediaSchemaModel
+from services.base import BaseService
 from utils.exceptions import DatabaseException
 from utils.repository import AbstractRepository
 
 
-class MediaService:
+class MediaService(BaseService):
     """
     Класс предоставляет сервис работы с БД
     для операций с медиа
     """
 
     def __init__(self, media_repo: AbstractRepository):
-        self.media_repo: AbstractRepository = media_repo()
+        super().__init__(media_repo)
 
     async def add_media(self, file: UploadFile) -> int:
         """
@@ -23,7 +24,7 @@ class MediaService:
             new_media_dict = MediaSchemaAddModel(
                 file_name=file.filename, file_body=file.file.read()
             ).model_dump()
-            return await self.media_repo.add_one(new_media_dict)
+            return await self.repo.add_one(new_media_dict)
         except Exception:
             raise DatabaseException(
                 message="Ошибка при добавлении медиафайла в БД."
@@ -37,9 +38,10 @@ class MediaService:
         None если медиафайла в БД нет
         """
         try:
-            media = await self.media_repo.find_one_or_none(id=id)
+            media = await self.repo.find_one_or_none(id=id)
             if media:
                 return media.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении медиафайла с id={id} из БД."
@@ -56,9 +58,7 @@ class MediaService:
         :return: True если операция успешна, иначе False
         """
         try:
-            return await self.media_repo.update_all_by_ids(
-                ids, tweet_id=tweet_id
-            )
+            return await self.repo.update_all_by_ids(ids, tweet_id=tweet_id)
         except Exception:
             raise DatabaseException(
                 message="Ошибка при добавлении id твита в медиафайлы в БД."

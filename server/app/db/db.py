@@ -1,3 +1,4 @@
+import os
 from typing import AsyncGenerator
 
 from config import setting
@@ -8,15 +9,22 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
-engine = create_async_engine(setting.database_url_asyncpg, echo=False)
+
+def get_database_url():
+    if os.environ.get("ENV") == "test":
+        return setting.database_test_url_asyncpg
+    else:
+        return setting.database_url_asyncpg
+
+
+engine = create_async_engine(get_database_url(), echo=False)
 async_session_maker = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
 class Base(DeclarativeBase):
-
-    repr_cols_num = 3
+    repr_cols_num = 4
     repr_cols = tuple()
 
     def __repr__(self):
@@ -29,8 +37,6 @@ class Base(DeclarativeBase):
 
     def to_json(self) -> dict:
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
-    # __table_args__ = {'keep_existing': True}
 
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:

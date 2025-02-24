@@ -1,6 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 
 import uvicorn
+from api.dependencies import user_service
 from api.routers import all_routers
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
@@ -14,7 +16,7 @@ from utils.exceptions import (
     CustomHTTPException,
     ServerHTTPException,
 )
-from utils.generate import generate_users
+from utils.fake_data import USERS
 
 tags_metadata = [
     {"name": "tweets", "description": "Операции с твитами"},
@@ -31,8 +33,11 @@ responses = {
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await generate_users()
+    os.environ["ENV"] = "MAIN"
+    if await user_service().is_empty():
+        await user_service().add_all(USERS)
     yield
+    pass
 
 
 app = FastAPI(
@@ -64,9 +69,10 @@ app.add_middleware(
 
 @app.middleware("http")
 async def my_middleware(request: Request, call_next):
-    # print("before")
+    # print(request.headers)
+    pass
     return await call_next(request)
-    # print("after")
+    pass
 
 
 @app.exception_handler(ServerHTTPException)

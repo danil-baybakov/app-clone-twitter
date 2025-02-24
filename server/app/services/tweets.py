@@ -1,16 +1,17 @@
 from config import setting
 from schemas.tweets import TweetSchema, TweetSchemaAddModel, TweetSchemaModel
+from services.base import BaseService
 from utils.exceptions import DatabaseException
 from utils.repository import AbstractRepository
 
 
-class TweetService:
+class TweetService(BaseService):
     """
     Класс предоставляет сервис работы с БД для операций с твиттами
     """
 
     def __init__(self, tweet_repo: AbstractRepository):
-        self.tweet_repo: AbstractRepository = tweet_repo()
+        super().__init__(tweet_repo)
 
     async def add_tweet(self, tweet: TweetSchemaAddModel) -> int | None:
         """
@@ -19,7 +20,7 @@ class TweetService:
         :return: id нового твитта
         """
         try:
-            return await self.tweet_repo.add_one(tweet.model_dump())
+            return await self.repo.add_one(tweet.model_dump())
         except Exception:
             raise DatabaseException(
                 message="Ошибка при добавлении твитта в БД."
@@ -31,7 +32,7 @@ class TweetService:
         :return: список объектов в данными твитта
         """
         try:
-            tweet_models = await self.tweet_repo.find_all()
+            tweet_models = await self.repo.find_all()
 
             tweets = []
             for tweet in tweet_models:
@@ -74,9 +75,10 @@ class TweetService:
         :return: объект с данными твитта
         """
         try:
-            tweet = await self.tweet_repo.find_one_or_none(id=id)
+            tweet = await self.repo.find_one_or_none(id=id)
             if tweet:
                 return tweet.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении твитта с id={id} из БД."
@@ -92,11 +94,10 @@ class TweetService:
         :return: объект с данными твитта
         """
         try:
-            tweet = await self.tweet_repo.find_one_or_none(
-                id=id, user_id=user_id
-            )
+            tweet = await self.repo.find_one_or_none(id=id, user_id=user_id)
             if tweet:
                 return tweet.to_read_model()
+            return None
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при получении твитта с id={id} "
@@ -110,7 +111,7 @@ class TweetService:
         :return: если удаление произошло то True, иначе False
         """
         try:
-            return await self.tweet_repo.delete_all(id=id)
+            return await self.repo.delete_all(id=id)
         except Exception:
             raise DatabaseException(
                 message=f"Ошибка при удалении твитта с id={id} из БД."

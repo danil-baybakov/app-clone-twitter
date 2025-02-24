@@ -80,7 +80,7 @@ async def get_tweets(
 @router.delete("/{id}", responses={404: {"model": ErrorSchemaResponse}})
 async def delete_tweet_by_id(
     tweet_service: Annotated[TweetService, Depends(tweet_service)],
-    id: int = Path(..., title="id твитта", description="id твитта"),
+    id: int = Path(..., title="id твитта", description="id твитта", gt=0),
     user_id=Depends(get_user),
 ) -> SuccessSchemaResponse:
     """
@@ -90,22 +90,29 @@ async def delete_tweet_by_id(
     :param user_id: id текущего пользователя
     :return:
     """
+    # делаем проверку на то что твитт с таким id существует в БД
+    # если проверка не пройдена, то ничего не меняем в БД
+    # выводим отрицательный результат на фронтенд
+    tweet = await tweet_service.get_tweet_by_id(id)
+    if tweet is None:
+        raise ClientHTTPException(
+            status_code=404, detail=f"Твитта с id={id} не найден."
+        )
+    # делаем проверку на то что пользователь удаляет свой твитт
+    # если проверка не пройдена, то ничего не меняем в БД
+    # выводим положительный результат на фронтенд
+    if tweet.user_id != user_id:
+        return {"result": True}
     # делаем запрос в БД для удаления твитта
     result = await tweet_service.delete_tweet_by_id(id)
-    # если результат запроса отрицательный
-    # значит твитта с таким id нет, сообщаем об этом на фронтенд
-    if not result:
-        raise ClientHTTPException(
-            status_code=404, detail=f"Tweet with id={id} not found."
-        )
     return {"result": result}
 
 
-@router.post("/{id}/likes")
+@router.post("/{id}/likes", responses={404: {"model": ErrorSchemaResponse}})
 async def like_tweet_by_id(
     like_service: Annotated[LikeService, Depends(like_service)],
     tweet_service: Annotated[TweetService, Depends(tweet_service)],
-    id: int = Path(..., title="id твитта", description="id твитта"),
+    id: int = Path(..., title="id твитта", description="id твитта", gt=0),
     user_id=Depends(get_user),
 ) -> SuccessSchemaResponse:
     """
@@ -116,6 +123,14 @@ async def like_tweet_by_id(
     :param user_id: id текущего пользователя
     :return:
     """
+    # делаем проверку на то что твитт с таким id существует в БД
+    # если проверка не пройдена, то ничего не меняем в БД
+    # выводим отрицательный результат на фронтенд
+    tweet = await tweet_service.get_tweet_by_id(id)
+    if tweet is None:
+        raise ClientHTTPException(
+            status_code=404, detail=f"Твитта с id={id} не найден."
+        )
     # делаем проверку на то что пользователь еще не ставил лайк на этот твитт
     # если проверка не пройдена, то ничего не меняем в БД
     # выводим положительный результат на фронтенд
@@ -145,7 +160,7 @@ async def like_tweet_by_id(
 async def unlike_tweet_by_id(
     like_service: Annotated[LikeService, Depends(like_service)],
     tweet_service: Annotated[TweetService, Depends(tweet_service)],
-    id: int = Path(..., title="id твитта", description="id твитта"),
+    id: int = Path(..., title="id твитта", description="id твитта", gt=0),
     user_id=Depends(get_user),
 ) -> SuccessSchemaResponse:
     """
@@ -156,21 +171,15 @@ async def unlike_tweet_by_id(
     :param user_id: id текущего пользователя
     :return:
     """
-    # делаем проверку на то что пользователь удаляет лайк не со своего твитта
+    # делаем проверку на то что твитт с таким id существует в БД
     # если проверка не пройдена, то ничего не меняем в БД
-    # выводим положительный результат на фронтенд
-    tweet = await tweet_service.get_tweet_by_id_with_user_id(
-        id=id, user_id=user_id
-    )
-    if tweet:
-        return {"result": True}
+    # выводим отрицательный результат на фронтенд
+    tweet = await tweet_service.get_tweet_by_id(id)
+    if tweet is None:
+        raise ClientHTTPException(
+            status_code=404, detail=f"Твитта с id={id} не найден."
+        )
 
     # делаем запрос в БД для удаления лайка с твитта
-    result = await like_service.delete_like(id, user_id)
-    if not result:
-        raise ClientHTTPException(
-            status_code=404,
-            detail=f"Пользователь с id={user_id} не ставил лайк"
-            f"на твитт с id={id}.",
-        )
-    return {"result": result}
+    await like_service.delete_like(id, user_id)
+    return {"result": True}

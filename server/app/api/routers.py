@@ -1,6 +1,5 @@
 from api.default import router as default_router
 from api.medias import router as medias_router
-from api.tests import router as tests_router
 from api.tweets import router as tweets_router
 from api.users import router as users_router
 
@@ -9,5 +8,4 @@ all_routers = [
     medias_router,
     tweets_router,
     users_router,
-    tests_router,
 ]
