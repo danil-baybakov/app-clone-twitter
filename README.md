@@ -8,13 +8,14 @@
 
 ```git clone https://gitlab.skillbox.ru/daniil_baibakov/python_advanced_diploma.git```
 
-2. Переход в директорию python_advanced_diploma
+2. Проверить, занят ли порт 80. В терминале ввести команду ```sudo netstat -lntp | grew -w "80"```. Если порт занят - освободить его.
 
+
+3. Переход в директорию python_advanced_diploma:
 ```cd python_advanced_diploma```
 
-3. Запуск приложения через docker-compose
-
-```docker-compose up```
+4. Запуск приложения через docker-compose (при разработке использовалась версия v2.33.0): 
+```docker compose up```
 
 <!--Пользовательская документация-->
 ## Документация
