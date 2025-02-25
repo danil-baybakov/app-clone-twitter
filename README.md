@@ -10,7 +10,6 @@
 
 2. Проверить, занят ли порт 80. В терминале ввести команду ```sudo netstat -lntp | grew -w "80"```. Если порт занят - освободить его.
 
-
 3. Переход в директорию python_advanced_diploma:
 ```cd python_advanced_diploma```
 
