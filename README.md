@@ -6,7 +6,7 @@
 
 1. Клонирование репозитория 
 
-```git clone https://gitlab.skillbox.ru/daniil_baibakov/python_advanced_diploma.git```
+```git clone https://github.com/danil-baybakov/app-clone-twitter.git```
 
 2. Проверить, занят ли порт 80. В терминале ввести команду ```sudo netstat -lntp | grew -w "80"```. Если порт занят - освободить его.
 
